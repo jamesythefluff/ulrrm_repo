@@ -37,17 +37,25 @@ delta_1_interp = CubicSpline(k_p_data, delta_1_data)
 
 def calculate_delta_0(k):
 
-    if not k_s_data.min() <= k <= k_s_data.max():
+    if k < k_s_data.min():
+        index_min = np.argmin(k_s_data)
+        a_s = delta_0_data[index_min] / k_s_data[index_min]
+        delta_0 = - a_s * k
+
+    elif k > k_s_data.max():
         raise ValueError(f"k = {k} outside s-scattering data range")
-    
-    return delta_0_interp(k)
+
+    else:
+        delta_0 = delta_0_interp(k)
+
+    return delta_0
 
 def calculate_delta_1(k):
 
     if k < k_p_data.min():
         index_min = np.argmin(k_p_data)
-        a_s = delta_1_data[index_min] / k_p_data[index_min]**3
-        delta_1 = - a_s * k**3
+        a_p_cubed = delta_1_data[index_min] / k_p_data[index_min]**3
+        delta_1 = - a_p_cubed * k**3
 
     elif k > k_p_data.max():
         raise ValueError(f"k = {k} outside p-scattering data range")

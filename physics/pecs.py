@@ -1,0 +1,45 @@
+import numpy as np
+
+from physics.wavefunctions import build_wavefunctions
+from physics.hamiltonian import build_H0, build_H
+from numerics.eigenvalues import diagonalise, label_eigenstates
+
+HARTREE_TO_GHZ = 6.5796839205e6
+
+def calculate_pecs(params):
+
+    pecs = []
+
+    wavefunctions = build_wavefunctions(params)
+
+    H0 = build_H0(wavefunctions, params)
+
+    large_R_eigenvectors = None
+
+    for i, R in enumerate(reversed(params.R_arr)):
+
+        H = build_H(R, wavefunctions, H0, params)
+
+        eigenvalues, eigenvectors = diagonalise(H)
+
+        pecs.append(eigenvalues)
+
+        # Save eigenvectors at largest R for labelling purposes
+        if large_R_eigenvectors is None:
+            large_R_eigenvectors = eigenvectors
+
+        print(f"{(i + 1) * 100 / len(params.R_arr):.1f} %")
+
+    # R was calculated from large → small, so restore small → large
+    pecs = np.array(pecs)
+    pecs = pecs[::-1, :]
+
+    # Shift PECs so reference level is zero
+    pecs = pecs - params.reference_level
+
+    labels = label_eigenstates(large_R_eigenvectors, params.basis)
+
+    if params.energy_units == "GHz":
+        pecs *= HARTREE_TO_GHZ
+
+    return pecs, labels

@@ -3,7 +3,7 @@ Convert NIST energy level data to a formatted data frame.
 """
 from pathlib import Path
 import pandas as pd
-import re
+import re 
 
 DATA_DIR = Path(__file__).parent
 
@@ -73,10 +73,10 @@ def load_energy_levels(energy_levels):
 
     return levels
 
-def get_energy(n, l, spin, levels):
+def get_energy(n, l, rydberg_spin, levels):
 
     # Singlet = 1, triplet = 3
-    multiplicity = 1 if spin == 0 else 3
+    multiplicity = 1 if rydberg_spin == 0 else 3
 
     # Find matching states
     matches = levels[
@@ -91,3 +91,5 @@ def get_energy(n, l, spin, levels):
     # Energy should be the same for different J if fine structure
     # isn't being considered, so take the first one.
     return matches.iloc[0]["Level (Hartree)"]
+
+    

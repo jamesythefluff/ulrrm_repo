@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from physics.scattering import Scattering
+
 l_letters = {
     0: "s",
     1: "p",
@@ -35,36 +37,33 @@ states_to_plot = [
 
 def plot_potential(R_arr, potential, labels, params):
 
-    states_to_plot = labels
-
-    rydberg_element = params.rydberg_element
-    perturber_element = params.perturber_element
-    energy_units = params.energy_units
-
     fig, ax = plt.subplots()
 
-    for i, (n, l) in enumerate(labels):
-        print(
-            f"{n}{l_letters[l]}:",
-            "finite =", np.all(np.isfinite(potential[:, i])),
-            "last =", potential[-1, i]
-        )
+    for channel in potential.keys():
 
-    for i, (n, l) in enumerate(labels):
+        channel_potential = potential[channel]
 
-        if (n,l) not in states_to_plot:
-            continue
+        states_to_plot = labels[channel]
 
-        ax.plot(R_arr, potential[:, i])
+        rydberg_element = params.rydberg_element
+        perturber_element = params.perturber_element
+        energy_units = params.energy_units
 
-        # Put label at the start of each curve
-        if l in l_letters:
-            ax.text(
-            R_arr[-1],
-            potential[-1, i],
-            f"{n}{l_letters[l]}",
-            fontsize=8
-            )
+        for i, (n, l) in enumerate(labels[channel]):
+
+            if (n,l) not in states_to_plot:
+                continue
+
+            ax.plot(R_arr, channel_potential[:, i])
+
+            # Put label at the start of each curve
+            if l in l_letters:
+                ax.text(
+                R_arr[-1],
+                channel_potential[-1, i],
+                f"{n}{l_letters[l]}",
+                fontsize=8
+                )
 
     ax.grid()
     ax.set_xlabel(r"Radial distance ($a_0$)")
@@ -93,4 +92,22 @@ def plot_phase_shifts(scattering_data):
     plt.xlabel("Momentum k")
     plt.ylabel("Phase Shift (Rad)")
     plt.title("p-wave scattering phase shift")
+    plt.show()
+
+def plot_scattering_lengths(scattering_data):
+
+    scattering = Scattering(scattering_data)
+
+    k_s_arr = scattering_data.k_s_data
+    k_p_arr = scattering_data.k_p_data
+
+    a_s_arr = [scattering.a_s(k_s) for k_s in k_s_arr]
+    a_p_arr = [scattering.a_p(k_p) for k_p in k_p_arr]
+
+    plt.plot(k_s_arr, a_s_arr)
+    plt.grid() 
+    plt.show()
+
+    plt.plot(k_p_arr, a_p_arr)
+    plt.grid()
     plt.show()

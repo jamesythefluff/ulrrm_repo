@@ -6,3 +6,6 @@ Stuff I should add:
 - what is the spin state and m state?
 - cross reference scattering phase shift data, is range appropriate?
 - better scattering phase shift extrapolation
+- check quantum defects are correct for isotope/fine structure series (e.g. 85 or 87 Rb?)
+- check how quantum defects are being calculated - rydberg-ritz expansion?
+- extrapolate a_s to zero energy scattering length when k below data range

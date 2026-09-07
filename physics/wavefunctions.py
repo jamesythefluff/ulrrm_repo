@@ -38,11 +38,11 @@ class Wavefunction:
 
     def calculate_k(self, r, params):
 
-        k_squared = (- self.rf**2 / self.n_eff**2 
+        k_squared = (- self.rf**2 / params.reference_level**2 
                      + 2 * self.rf / r )
         
         if k_squared < 0:
-            k = None
+            k = 0
             if not params.classically_forbidden:
                 print(f"r = {r} classically forbidden region reached")
                 params.classically_forbidden = True

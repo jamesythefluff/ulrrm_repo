@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from types import ModuleType
 
-from . import helium_scattering, calcium_scattering, rubidium_scattering
+from . import helium_scattering, calcium_scattering, rubidium_scattering_Fabrikant
 
 AMU = 1.660539068e-27
 
@@ -29,6 +29,6 @@ ELEMENTS = {
         mass = 84.9117897379 * AMU,
         ionisation_energy = 0.15350663,
         energy_data = "rubidium_energy_levels.csv",
-        scattering_data = rubidium_scattering
+        scattering_data = rubidium_scattering_Fabrikant
     )
 }

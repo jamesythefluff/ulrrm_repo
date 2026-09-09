@@ -10,41 +10,45 @@ class Params:
 
     def __init__(self):
 
-        # SETUP PARAMETERS
+        # ADJUSTABLE SETUP PARAMETERS
 
         self.rydberg_element = "Rb" # chemical symbol (str)
         self.perturber_element = "Rb"
-        self.energy_units = "GHz"
-
-        self.R_arr = np.linspace(3, 1000, 500) # Ground perturber position relative to Rydberg ionic core
-
-        self.phi = 0
-        self.theta = 0
-
-        self.reference_level = 30 # This hydrogenic level is set as the zero ref. for PECs
-
-        # QUANTUM NUMBERS
-        
+        self.R_arr = np.linspace(200, 1600, 500) # Ground perturber position relative to Rydberg ionic core
         self.n = 30
         self.n_min = self.n - 1
         self.n_max = self.n + 4
-        self.n_arr = np.arange(self.n_min, self.n_max)
-
         self.l = 8
         self.l_min = 0
+        self.m_arr = [-1, 0, 1]
+        self.m = None # set from m_arr values in pecs loop
+        self.rydberg_spin = 0 # spin quantum number of valence Rydberg electrons
+        self.scattering_channels = ["singlet", "tripletJ=2"] # there is only one singlet channel 1S0 1P1 ("singlet")
+                                                  # there are three singlet channels 3S1 3PJ where J=0,1,2 ("tripletJ=0" etc.)
 
+        # AUTOMATED SETUP STUFF
+
+        self.xaxis = None
+        self.yaxis = None
+
+        if self.rydberg_element == "Rb" and self.perturber_element == "Rb":
+            self.xaxis = [0, 2000]
+            self.yaxis = [-260, 10]
+            
+
+        self.n_arr = np.arange(self.n_min, self.n_max)
         self.basis = [
             (n, l)
             for n in self.n_arr
             for l in range(self.l_min, n)
         ]
 
-        self.m = 0
-        self.rydberg_spin = 0 # spin quantum number of valence Rydberg electrons
+        self.reference_level = self.n # This hydrogenic level is set as the zero ref. for PECs
 
-        self.scattering_channels = ["singlet", "triplet"]
+        self.energy_units = "GHz" # The energy units for the PECs. Can be "GHz" or "Hartree"
 
-        # AUTOMATED SETUP STUFF
+        self.phi = 0
+        self.theta = 0
 
         self.classically_forbidden = False
 

@@ -39,31 +39,38 @@ def plot_potential(R_arr, potential, labels, params):
 
     fig, ax = plt.subplots()
 
-    for channel in potential.keys():
+    for m in potential.keys():
 
-        channel_potential = potential[channel]
+        for channel in potential[m].keys():
 
-        states_to_plot = labels[channel]
+            channel_potential = potential[m][channel]
 
-        rydberg_element = params.rydberg_element
-        perturber_element = params.perturber_element
-        energy_units = params.energy_units
+            states_to_plot = labels[m][channel]
 
-        for i, (n, l) in enumerate(labels[channel]):
+            rydberg_element = params.rydberg_element
+            perturber_element = params.perturber_element
+            energy_units = params.energy_units
 
-            if (n,l) not in states_to_plot:
-                continue
+            for i, (n, l) in enumerate(labels[m][channel]):
 
-            ax.plot(R_arr, channel_potential[:, i])
+                if (n,l) not in states_to_plot:
+                    continue
 
-            # Put label at the start of each curve
-            if l in l_letters:
-                ax.text(
-                R_arr[-1],
-                channel_potential[-1, i],
-                f"{n}{l_letters[l]}",
-                fontsize=8
-                )
+                ax.plot(R_arr, channel_potential[:, i])
+
+                # Put label at the start of each curve
+                if l in l_letters:
+                    ax.text(
+                    R_arr[-1],
+                    channel_potential[-1, i],
+                    f"{n}{l_letters[l]}",
+                    fontsize=8
+                    )
+
+    if params.xaxis is not None:
+        ax.set_xlim(params.xaxis[0], params.xaxis[1])
+    if params.yaxis is not None:
+        ax.set_ylim(params.yaxis[0], params.yaxis[1])
 
     ax.grid()
     ax.set_xlabel(r"Radial distance ($a_0$)")

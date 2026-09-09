@@ -21,35 +21,19 @@ class Wavefunction:
 
     def calculate_normalisation(self):
 
-        def integrand(r):
+        n_eff = self.n_eff
+        l = self.l
+        rf = self.rf
 
-            W = mp.whitw(
-                self.n_eff,
-                self.l + 0.5,
-                2 * self.rf * r / self.n_eff
+        N = np.sqrt(rf) / (
+            n_eff
+            * np.sqrt(
+                mp.gamma(n_eff + l + 1)
+                * mp.gamma(n_eff - l)
             )
-            return abs(W)**2
-        
-        integral = mp.quad(integrand, [0, mp.inf])
-    
-        N = 1 / mp.sqrt(integral)
-    
+        )
+
         return N
-
-    def calculate_k(self, r, params):
-
-        k_squared = (- self.rf**2 / params.reference_level**2 
-                     + 2 * self.rf / r )
-        
-        if k_squared < 0:
-            k = 0
-            if not params.classically_forbidden:
-                print(f"r = {r} classically forbidden region reached")
-                params.classically_forbidden = True
-        else:
-            k = np.sqrt(k_squared)
-    
-        return k
 
     def radial(self, r):
 
@@ -83,14 +67,42 @@ class Wavefunction:
 
         return radial_derivative
 
-    def radial_gradient(self, r):
+    def gradient_m_0(self, r):
 
         Y_lm = self.angular()
         dR_dr = self.radial_derivative(r)
-        
+
         grad = dR_dr * Y_lm
 
-        return grad
+        return np.array([
+            0.0,
+            0.0,
+            grad
+        ])
+
+    def gradient_m_mod_1(self, r):
+
+        grad = []
+
+        derivative = (self.radial(r) / (2*r) 
+        * np.sqrt((2*self.l+1)*self.l*(self.l+1)/(4*np.pi))
+        )
+
+        return np.array([
+            derivative,
+            np.sign(self.m) * 1j * derivative,
+            0.0
+        ])
+
+
+    def gradient(self, r):
+
+        if self.m == 0:
+            return self.gradient_m_0(r)
+        elif abs(self.m) == 1:
+            return self.gradient_m_mod_1(r)
+        else:
+            raise ValueError(f"Gradient not implemented for m = {self.m}")
 
 def build_wavefunctions(params):
 

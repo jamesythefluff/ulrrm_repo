@@ -27,14 +27,6 @@ l_letters = {
     20: "z"
 }
 
-states_to_plot = [
-    (29, 8),  
-    (30, 8),  
-    (31, 2),  
-    (32, 1),  
-    (33, 0)
-]
-
 def plot_potential(R_arr, potential, labels, params):
 
     fig, ax = plt.subplots()
@@ -45,16 +37,11 @@ def plot_potential(R_arr, potential, labels, params):
 
             channel_potential = potential[m][channel]
 
-            states_to_plot = labels[m][channel]
-
             rydberg_element = params.rydberg_element
             perturber_element = params.perturber_element
             energy_units = params.energy_units
 
             for i, (n, l) in enumerate(labels[m][channel]):
-
-                if (n,l) not in states_to_plot:
-                    continue
 
                 ax.plot(R_arr, channel_potential[:, i])
 

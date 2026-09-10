@@ -4,6 +4,7 @@ from scipy.optimize import linear_sum_assignment
 from physics.wavefunctions import build_wavefunctions
 from physics.hamiltonian import build_H0, build_H
 from numerics.eigenvalues import diagonalise, label_eigenstates, adiabatic_reordering
+from physics.scattering import Scattering
 
 HARTREE_TO_GHZ = 6.5796839205e6
 
@@ -40,9 +41,18 @@ def calculate_channel_pecs(channel, wavefunctions, H0, params):
 
     prev_eigvecs = None
 
+    data = params.perturber_element_data.scattering_data
+    
+    k_s_data = data.k_s_data[channel]
+    k_p_data = data.k_p_data[channel]
+    delta_0_data = data.delta_0_data[channel]
+    delta_1_data = data.delta_1_data[channel]
+
+    scattering = Scattering(k_s_data, delta_0_data, k_p_data, delta_1_data)
+
     for i, R in enumerate(reversed(params.R_arr)):
 
-        H = build_H(R, wavefunctions, H0, channel, params)
+        H = build_H(R, wavefunctions, H0, scattering, params)
 
         assert np.allclose(H, H.conj().T) # Check Hermicity of Hamiltonian
 

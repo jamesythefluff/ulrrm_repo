@@ -1,6 +1,15 @@
 # IMPORTS
 import numpy as np
-from physics.scattering import Scattering
+
+def calculate_k(R, params):
+
+    k_2 = (- params.rydberg_factor**2 / params.reference_level**2 
+           + 2 * params.rydberg_factor / R)
+
+    if k_2 < 0:
+        raise ValueError(f"k_2 = {k_2} must not be negative")
+    
+    return np.sqrt(k_2)
 
 def build_H0(wavefunctions, params):
 
@@ -14,18 +23,9 @@ def build_H0(wavefunctions, params):
 
     return H0
 
-def build_H(R,wavefunctions, H0, channel, params):
+def build_H(R,wavefunctions, H0, scattering, params):
 
-    data = params.perturber_element_data.scattering_data
-
-    k_s_data = data.k_s_data[channel]
-    k_p_data = data.k_p_data[channel]
-    delta_0_data = data.delta_0_data[channel]
-    delta_1_data = data.delta_1_data[channel]
-
-    scattering = Scattering(k_s_data, delta_0_data, k_p_data, delta_1_data)
-
-    k = np.sqrt(- params.rydberg_factor**2 / params.reference_level**2 + 2 * params.rydberg_factor / R)
+    k = calculate_k(params, R)
     a_s = scattering.a_s(k)
     a_p_cubed = scattering.a_p(k)
     

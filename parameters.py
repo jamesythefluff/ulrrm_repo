@@ -23,7 +23,7 @@ class Params:
         self.m_arr = [-1, 0, 1]
         self.m = None # set from m_arr values in pecs loop
         self.rydberg_spin = 0 # spin quantum number of valence Rydberg electrons
-        self.scattering_channels = ["singlet", "tripletJ=2"] # there is only one singlet channel 1S0 1P1 ("singlet")
+        self.scattering_channels = ["singlet"] # there is only one singlet channel 1S0 1P1 ("singlet")
                                                   # there are three singlet channels 3S1 3PJ where J=0,1,2 ("tripletJ=0" etc.)
 
         # AUTOMATED SETUP STUFF

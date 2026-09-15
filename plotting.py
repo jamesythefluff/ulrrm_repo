@@ -1,7 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from pathlib import Path
 
 from physics.scattering import Scattering
+
+LITERATURE_DIR = Path(__file__).parent / "data" / "potential_energy_curves"
+
+# Cycled so overlaid literature curves stay tellable apart in the legend.
+LITERATURE_STYLES = ["--", "-.", ":"]
 
 l_letters = {
     0: "s",
@@ -27,9 +34,31 @@ l_letters = {
     20: "z"
 }
 
+def scale_x(R, x_scale):
+    """
+    Eiles plots these curves against sqrt(R), which spreads out the small R
+    region where the wells are. "linear" plots R itself.
+    """
+    if x_scale == "root":
+        return np.sqrt(R)
+
+    return R
+
+
 def plot_potential(R_arr, potential, labels, params):
 
     fig, ax = plt.subplots()
+
+    energy_units = params.energy_units
+    x_scale = getattr(params, "x_scale", "linear")
+
+    # Digitised literature curves for comparison, plotted underneath.
+    for i, filename in enumerate(getattr(params, "literature_pecs", [])):
+        plot_literature_pec(
+            ax, filename, x_scale, LITERATURE_STYLES[i % len(LITERATURE_STYLES)]
+        )
+
+    x = scale_x(np.asarray(R_arr, dtype=float), x_scale)
 
     for m in potential.keys():
 
@@ -37,18 +66,14 @@ def plot_potential(R_arr, potential, labels, params):
 
             channel_potential = potential[m][channel]
 
-            rydberg_element = params.rydberg_element
-            perturber_element = params.perturber_element
-            energy_units = params.energy_units
-
             for i, (n, l) in enumerate(labels[m][channel]):
 
-                ax.plot(R_arr, channel_potential[:, i])
+                ax.plot(x, channel_potential[:, i], linewidth=0.8)
 
-                # Put label at the start of each curve
+                # Put label at the end of each curve
                 if l in l_letters:
                     ax.text(
-                    R_arr[-1],
+                    x[-1],
                     channel_potential[-1, i],
                     f"{n}{l_letters[l]}",
                     fontsize=8
@@ -60,11 +85,46 @@ def plot_potential(R_arr, potential, labels, params):
         ax.set_ylim(params.yaxis[0], params.yaxis[1])
 
     ax.grid()
-    ax.set_xlabel(r"Radial distance ($a_0$)")
+    if x_scale == "root":
+        ax.set_xlabel(r"$\sqrt{R}$ ($\sqrt{a_0}$)")
+    else:
+        ax.set_xlabel(r"Radial distance $R$ ($a_0$)")
     ax.set_ylabel(f"Potential energy ({energy_units})")
-    ax.set_title(f"{rydberg_element}*-{perturber_element} ULRRM bonding potential")
+    ax.set_title(
+        f"{params.rydberg_element}*-{params.perturber_element} ULRRM bonding potential"
+    )
+
+    if getattr(params, "literature_pecs", []):
+        ax.legend(loc="lower right", fontsize=8)
 
     plt.show()
+
+
+def plot_literature_pec(ax, filename, x_scale="linear", linestyle="--"):
+    """
+    Overlay a digitised literature curve. The CSVs are headerless, column 0 the
+    internuclear distance in a0 and column 1 the energy in GHz, so they must be
+    plotted against the same axis scaling as the calculated curves.
+    """
+    pecs = pd.read_csv(LITERATURE_DIR / filename, header=None)
+
+    # WebPlotDigitizer returns points in extraction order, not in order of
+    # increasing R, so joining them up as read produces a zigzag rather than a
+    # curve. Point order carries no meaning here, so sort on R.
+    pecs = pecs.sort_values(by=0)
+
+    distance = scale_x(pecs.iloc[:, 0].to_numpy(dtype=float), x_scale)
+    energy = pecs.iloc[:, 1].to_numpy(dtype=float)
+
+    ax.plot(
+        distance,
+        energy,
+        color="k",
+        linestyle=linestyle,
+        linewidth=1.2,
+        label=Path(filename).stem,
+    )
+
 
 def plot_phase_shifts(scattering_data, channels):
     """

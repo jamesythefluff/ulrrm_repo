@@ -29,15 +29,34 @@ class Params:
         self.scattering_channels = ["singlet", "tripletJ=2"] # there is only one singlet channel 1S0 1P1 ("singlet")
                                                   # there are three singlet channels 3S1 3PJ where J=0,1,2 ("tripletJ=0" etc.)
 
+        # PLOTTING
+        # "linear" plots R, "root" plots sqrt(R) as Eiles does. Note that
+        # xaxis limits are in whatever units the chosen scale produces.
+        self.x_scale = "linear"
+
+        # Digitised literature curves in data/potential_energy_curves/ to
+        # overlay on the PECs for comparison.
+        self.literature_pecs = []
+
         # AUTOMATED SETUP STUFF
 
         self.xaxis = None
         self.yaxis = None
 
         if self.rydberg_element == "Rb" and self.perturber_element == "Rb":
-            self.xaxis = [0, 2000]
+            # Reproduces Eiles, J. Phys. B 52, 113001 (2019), figure 6.
+            self.x_scale = "root"
+            self.xaxis = [10, 50]
             self.yaxis = [-260, 10]
-            
+            self.literature_pecs = [
+                "eiles_rb_trilobite_lower.csv",
+                "eiles_rb_trilobite_upper.csv",
+                # eiles_rb_butterfly.csv is present but left out by default: the
+                # digitisation picked up several overlapping curves at once, so
+                # it is a scattered band rather than a single curve. Re-digitise
+                # before trusting it.
+            ]
+
 
         self.n_arr = np.arange(self.n_min, self.n_max)
         self.basis = [

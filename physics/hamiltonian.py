@@ -25,7 +25,7 @@ def build_H0(wavefunctions, params):
 
 def build_H(R,wavefunctions, H0, scattering, params):
 
-    k = calculate_k(params, R)
+    k = calculate_k(R, params)
     a_s = scattering.a_s(k)
     a_p_cubed = scattering.a_p(k)
     

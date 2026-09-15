@@ -4,7 +4,7 @@ Creates a table of quantum defects using energy level data.
 import numpy as np
 import pandas as pd
 
-from data.energy_levels import get_energy
+from data.energy_levels.energy_levels import get_energy
 
 def calculate_quantum_defect(n, l, rydberg_spin, levels, ionisation_energy, rydberg_factor, rydberg_element):
 

@@ -66,42 +66,55 @@ def plot_potential(R_arr, potential, labels, params):
 
     plt.show()
 
-def plot_phase_shifts(scattering_data):
+def plot_phase_shifts(scattering_data, channels):
+    """
+    s- and p-wave phase shifts for each named scattering channel.
+    """
+    fig, (ax_s, ax_p) = plt.subplots(1, 2, figsize=(11, 4))
 
-    k_s = scattering_data.k_s_data 
-    delta_0 = scattering_data.delta_0_data
+    for channel in channels:
 
-    plt.plot(k_s, delta_0)
-    plt.grid()
-    plt.xlabel("Momentum k")
-    plt.ylabel("Phase Shift (Rad)")
-    plt.title("s-wave scattering phase shift")
+        scattering = Scattering(scattering_data, channel)
+
+        ax_s.plot(scattering.k_s_data, scattering.delta_0_data, label=channel)
+        ax_p.plot(scattering.k_p_data, scattering.delta_1_data, label=channel)
+
+    for ax, name in ((ax_s, "s-wave"), (ax_p, "p-wave")):
+        ax.grid()
+        ax.set_xlabel(r"Electron momentum $k$ (a.u.)")
+        ax.set_ylabel("Phase shift (rad)")
+        ax.set_title(f"{name} scattering phase shift")
+        ax.legend()
+
+    fig.tight_layout()
     plt.show()
 
-    k_p = scattering_data.k_p_data
-    delta_1 = scattering_data.delta_1_data
+def plot_scattering_lengths(scattering_data, channels):
+    """
+    Energy dependent s-wave scattering length and p-wave scattering volume,
+    over the momentum range for which phase shift data exists.
+    """
+    fig, (ax_s, ax_p) = plt.subplots(1, 2, figsize=(11, 4))
 
-    plt.plot(k_p, delta_1)
-    plt.grid()
-    plt.xlabel("Momentum k")
-    plt.ylabel("Phase Shift (Rad)")
-    plt.title("p-wave scattering phase shift")
-    plt.show()
+    for channel in channels:
 
-def plot_scattering_lengths(scattering_data):
+        scattering = Scattering(scattering_data, channel)
 
-    scattering = Scattering(scattering_data)
+        a_s = [scattering.a_s(k) for k in scattering.k_s_data]
+        a_p = [scattering.a_p(k) for k in scattering.k_p_data]
 
-    k_s_arr = scattering_data.k_s_data
-    k_p_arr = scattering_data.k_p_data
+        ax_s.plot(scattering.k_s_data, a_s, label=channel)
+        ax_p.plot(scattering.k_p_data, a_p, label=channel)
 
-    a_s_arr = [scattering.a_s(k_s) for k_s in k_s_arr]
-    a_p_arr = [scattering.a_p(k_p) for k_p in k_p_arr]
+    ax_s.set_ylabel(r"$a_s(k)$ ($a_0$)")
+    ax_s.set_title("s-wave scattering length")
+    ax_p.set_ylabel(r"$a_p^3(k)$ ($a_0^3$)")
+    ax_p.set_title("p-wave scattering volume")
 
-    plt.plot(k_s_arr, a_s_arr)
-    plt.grid() 
-    plt.show()
+    for ax in (ax_s, ax_p):
+        ax.grid()
+        ax.set_xlabel(r"Electron momentum $k$ (a.u.)")
+        ax.legend()
 
-    plt.plot(k_p_arr, a_p_arr)
-    plt.grid()
+    fig.tight_layout()
     plt.show()

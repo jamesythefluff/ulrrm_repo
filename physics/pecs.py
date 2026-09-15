@@ -42,13 +42,8 @@ def calculate_channel_pecs(channel, wavefunctions, H0, params):
     prev_eigvecs = None
 
     data = params.perturber_element_data.scattering_data
-    
-    k_s_data = data.k_s_data[channel]
-    k_p_data = data.k_p_data[channel]
-    delta_0_data = data.delta_0_data[channel]
-    delta_1_data = data.delta_1_data[channel]
 
-    scattering = Scattering(k_s_data, delta_0_data, k_p_data, delta_1_data)
+    scattering = Scattering(data, channel)
 
     for i, R in enumerate(reversed(params.R_arr)):
 

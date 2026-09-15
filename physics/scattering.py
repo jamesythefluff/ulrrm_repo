@@ -3,13 +3,21 @@ from scipy.interpolate import CubicSpline
 
 class Scattering:
 
-    def __init__(self, k_s_data, delta_0_data, k_p_data, delta_1_data):
+    def __init__(self, data, channel):
+        """
+        data    : a module from data/scattering/, whose k_*_data and delta_*_data
+                  are dicts keyed by scattering channel
+        channel : e.g. "singlet", "tripletJ=2"
+        """
+        self.channel = channel
 
-        self.k_s_data = k_s_data
-        self.k_p_data = k_p_data
+        self.k_s_data = data.k_s_data[channel]
+        self.k_p_data = data.k_p_data[channel]
+        self.delta_0_data = data.delta_0_data[channel]
+        self.delta_1_data = data.delta_1_data[channel]
 
-        self.delta_0_spline = CubicSpline(k_s_data, delta_0_data)
-        self.delta_1_spline = CubicSpline(k_p_data, delta_1_data)
+        self.delta_0_spline = CubicSpline(self.k_s_data, self.delta_0_data)
+        self.delta_1_spline = CubicSpline(self.k_p_data, self.delta_1_data)
 
     def delta_0(self, k):
 

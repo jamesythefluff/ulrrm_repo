@@ -29,7 +29,7 @@ class RydbergConfig:
     l_min : int = 0
     l_max : int = 1000
 
-    m_arr : list = field(default_factory=lambda : [-1, 0, 1])
+    m_arr : list = field(default_factory=lambda : [0])
     m : int | None = None
 
     rydberg_spin : float = 0.0 # spin quantum number of valence Rydberg electrons
@@ -61,10 +61,10 @@ class RydbergConfig:
             R_arr = np.linspace(200, 1600, 500),
 
             n = 30,
-            n_range = (-1, 4),
+            n_range = (-3, 6),
 
             l_min = 0,
-            l_max = 34,
+            l_max = 100,
 
             scattering_channels = ("singlet", "tripletJ=2"),
 
@@ -74,8 +74,7 @@ class RydbergConfig:
             y_lims = [-260, 10],
 
             literature_pecs = [
-                "eiles_rb_trilobite_lower.csv",
-                "eiles_rb_trilobite_upper.csv"
+                "eiles_rb_triplet_trilobite_zoom.csv"
             ]
         )
 

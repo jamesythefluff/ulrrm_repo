@@ -96,8 +96,8 @@ class Wavefunction:
         )
 
         gradient = np.array([
-            derivative,
-            np.sign(self.m) * 1j * derivative,
+            -np.sign(self.m) * derivative,
+            -1j * derivative,
             0.0
         ])
 

@@ -1,8 +1,10 @@
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
+
 def diagonalise(H):
      return np.linalg.eigh(H)
+
 
 def label_eigenstates(large_R_eigenvectors, basis):
 
@@ -22,6 +24,7 @@ def label_eigenstates(large_R_eigenvectors, basis):
 
     return labels
 
+
 def track_eigenstates(eigenvalues_list, eigenvectors_list):
     """
     Reorder a sequence of independently diagonalised (eigenvalues, eigenvectors)
@@ -37,16 +40,22 @@ def track_eigenstates(eigenvalues_list, eigenvectors_list):
     Steps must be passed in the order they were computed, so that neighbouring
     entries correspond to neighbouring R.
 
-    Parameters
+    Arguments
     ----------
-    eigenvalues_list : list of 1D arrays, one per R step
-    eigenvectors_list : list of 2D arrays, one per R step, columns matching
+    eigenvalues_list : list
+        list of 1D arrays, one per R step
+
+    eigenvectors_list : list
+        list of 2D arrays, one per R step, columns matching
         eigenvalues_list
 
     Returns
     -------
-    tracked_eigenvalues : 2D array, shape (n_steps, n_states)
-    tracked_eigenvectors : list of 2D arrays, reordered to match
+    tracked_eigenvalues : np.ndarray
+        2D array, shape (n_steps, n_states)
+
+    tracked_eigenvectors : list
+        list of 2D arrays, reordered to match
     """
     n_steps = len(eigenvalues_list)
     n_states = len(eigenvalues_list[0])

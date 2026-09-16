@@ -1,4 +1,5 @@
 import numpy as np
+from dataclasses import dataclass, field
 
 from data.energy_levels.energy_levels import load_energy_levels
 from physics.quantum_defects import (
@@ -9,75 +10,99 @@ from data.element_data import ELEMENTS
 
 ELECTRON_MASS = 9.1093837139e-31
 
-class Params:
+@dataclass
+class RydbergConfig:
+    """
+    Pure user-facing input.
+    """
+    rydberg_element : str = "Rb" # chemical symbol (str)
+    perturber_element : str = "Rb"
 
-    def __init__(self):
+    R_arr : np.ndarray = field(default_factory=lambda : np.linspace(200, 1600, 500))
 
-        # ADJUSTABLE SETUP PARAMETERS
+    theta : float = 0.0 # Polar angle
+    phi : float = 0.0 # Azimuthal angle
 
-        self.rydberg_element = "Rb" # chemical symbol (str)
-        self.perturber_element = "Rb"
-        self.R_arr = np.linspace(200, 1600, 500) # Ground perturber position relative to Rydberg ionic core
-        self.n = 30
-        self.n_min = self.n - 1
-        self.n_max = self.n + 4
-        self.l = 8
-        self.l_min = 0
-        self.m_arr = [-1, 0, 1]
-        self.m = None # set from m_arr values in pecs loop
-        self.rydberg_spin = 0 # spin quantum number of valence Rydberg electrons
-        self.scattering_channels = ["singlet", "tripletJ=2"] # there is only one singlet channel 1S0 1P1 ("singlet")
-                                                  # there are three singlet channels 3S1 3PJ where J=0,1,2 ("tripletJ=0" etc.)
+    n : int = 30
+    n_range : tuple[int, int] = (-1, 4)
 
-        # PLOTTING
-        # "linear" plots R, "root" plots sqrt(R) as Eiles does. Note that
-        # xaxis limits are in whatever units the chosen scale produces.
-        self.x_scale = "linear"
+    l_min : int = 0
+    l_max : int = 1000
 
-        # Digitised literature curves in data/potential_energy_curves/ to
-        # overlay on the PECs for comparison.
-        self.literature_pecs = []
+    m_arr : list = field(default_factory=lambda : [-1, 0, 1])
+    m : int | None = None
 
-        # AUTOMATED SETUP STUFF
+    rydberg_spin : float = 0.0 # spin quantum number of valence Rydberg electrons
 
-        self.xaxis = None
-        self.yaxis = None
+    # there is only one singlet channel 1S0 1P1 ("singlet")
+    # there are three singlet channels 3S1 3PJ where J=0,1,2 ("tripletJ=0" etc.)
+    scattering_channels : tuple = ("singlet",)
 
-        if self.rydberg_element == "Rb" and self.perturber_element == "Rb":
-            # Reproduces Eiles, J. Phys. B 52, 113001 (2019), figure 6.
-            self.x_scale = "root"
-            self.xaxis = [10, 50]
-            self.yaxis = [-260, 10]
-            self.literature_pecs = [
+    # "linear" plots R, "root" plots sqrt(R) as Eiles does. Note that
+    # xaxis limits are in whatever units the chosen scale produces.
+    x_scale : str = "linear"
+    energy_units : str = "GHz" # GHz or Hartree
+
+    x_lims : list[float] = field(default_factory=list)
+    y_lims : list[float] = field(default_factory=list)
+
+    # Digitised literature curves in data/potential_energy_curves/ to
+    # overlay on the PECs for comparison.
+    literature_pecs : list[str] = field(default_factory=list)
+
+    
+    @classmethod
+    def eiles_rb(cls, x_scale="linear"):
+
+        return cls(
+            rydberg_element = "Rb",
+            perturber_element = "Rb",
+
+            R_arr = np.linspace(200, 1600, 500),
+
+            n = 30,
+            n_range = (-1, 4),
+
+            l_min = 0,
+            l_max = 34,
+
+            scattering_channels = ("singlet", "tripletJ=2"),
+
+            x_scale = x_scale,
+
+            x_lims = [200, 1600],
+            y_lims = [-260, 10],
+
+            literature_pecs = [
                 "eiles_rb_trilobite_lower.csv",
-                "eiles_rb_trilobite_upper.csv",
-                # eiles_rb_butterfly.csv is present but left out by default: the
-                # digitisation picked up several overlapping curves at once, so
-                # it is a scattered band rather than a single curve. Re-digitise
-                # before trusting it.
+                "eiles_rb_trilobite_upper.csv"
             ]
+        )
 
 
-        self.n_arr = np.arange(self.n_min, self.n_max)
+class RydbergSystem():
+
+    def __init__(self, config):
+
+        self.config = config
+
+        # n_range holds offsets either side of config.n, not absolute n values.
+        self.n_arr = np.arange(config.n + config.n_range[0], config.n + config.n_range[1])
         self.basis = [
             (n, l)
             for n in self.n_arr
-            for l in range(self.l_min, n)
+            for l in range(config.l_min, min(n, config.l_max+1))
         ]
 
-        self.reference_level = self.n # This hydrogenic level is set as the zero ref. for PECs
-
-        self.energy_units = "GHz" # The energy units for the PECs. Can be "GHz" or "Hartree"
-
-        self.phi = 0
-        self.theta = 0
+        self.reference_level = config.n # This hydrogenic level is set as the zero ref. for PECs
 
         self.classically_forbidden = False
 
-        self.rydberg_element_data = ELEMENTS[self.rydberg_element]
-        self.perturber_element_data = ELEMENTS[self.perturber_element]
+        self.rydberg_element_data = ELEMENTS[config.rydberg_element]
+        self.perturber_element_data = ELEMENTS[config.perturber_element]
 
-        self.reduced_mass = ELECTRON_MASS * self.rydberg_element_data.mass / (ELECTRON_MASS + self.rydberg_element_data.mass)
+        self.reduced_mass = (ELECTRON_MASS * self.rydberg_element_data.mass / 
+                             (ELECTRON_MASS + self.rydberg_element_data.mass))
         self.rydberg_factor = self.reduced_mass / ELECTRON_MASS
 
         # Prefer fitted Rydberg-Ritz parameters where we have them, and fall
@@ -97,7 +122,7 @@ class Params:
             (n, l): calculate_quantum_defect_from_levels(
                 n,
                 l,
-                self.rydberg_spin,
+                self.config.rydberg_spin,
                 self.levels,
                 self.rydberg_element_data.ionisation_energy,
                 self.rydberg_factor,

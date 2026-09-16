@@ -45,15 +45,17 @@ def scale_x(R, x_scale):
     return R
 
 
-def plot_potential(R_arr, potential, labels, params):
+def plot_potential(R_arr, potential, labels, system):
+
+    config = system.config
 
     fig, ax = plt.subplots()
 
-    energy_units = params.energy_units
-    x_scale = getattr(params, "x_scale", "linear")
+    energy_units = config.energy_units
+    x_scale = getattr(config, "x_scale", "linear")
 
     # Digitised literature curves for comparison, plotted underneath.
-    for i, filename in enumerate(getattr(params, "literature_pecs", [])):
+    for i, filename in enumerate(getattr(config, "literature_pecs", [])):
         plot_literature_pec(
             ax, filename, x_scale, LITERATURE_STYLES[i % len(LITERATURE_STYLES)]
         )
@@ -79,10 +81,10 @@ def plot_potential(R_arr, potential, labels, params):
                     fontsize=8
                     )
 
-    if params.xaxis is not None:
-        ax.set_xlim(params.xaxis[0], params.xaxis[1])
-    if params.yaxis is not None:
-        ax.set_ylim(params.yaxis[0], params.yaxis[1])
+    if config.x_lims:
+        ax.set_xlim(config.x_lims[0], config.x_lims[1])
+    if config.y_lims:
+        ax.set_ylim(config.y_lims[0], config.y_lims[1])
 
     ax.grid()
     if x_scale == "root":
@@ -91,10 +93,10 @@ def plot_potential(R_arr, potential, labels, params):
         ax.set_xlabel(r"Radial distance $R$ ($a_0$)")
     ax.set_ylabel(f"Potential energy ({energy_units})")
     ax.set_title(
-        f"{params.rydberg_element}*-{params.perturber_element} ULRRM bonding potential"
+        f"{config.rydberg_element}*-{config.perturber_element} ULRRM bonding potential"
     )
 
-    if getattr(params, "literature_pecs", []):
+    if getattr(config, "literature_pecs", []):
         ax.legend(loc="lower right", fontsize=8)
 
     plt.show()
@@ -148,6 +150,7 @@ def plot_phase_shifts(scattering_data, channels):
 
     fig.tight_layout()
     plt.show()
+
 
 def plot_scattering_lengths(scattering_data, channels):
     """

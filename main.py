@@ -1,12 +1,9 @@
 from physics.pecs import calculate_pecs
 from plotting import plot_potential, plot_phase_shifts, plot_scattering_lengths
-from parameters import Params
+from parameters import RydbergConfig, RydbergSystem
 
-params = Params()
+config = RydbergConfig.eiles_rb()
+system = RydbergSystem(config)
 
-#plot_phase_shifts(params.perturber_element_data.scattering_data, params.scattering_channels)
-
-#plot_scattering_lengths(params.perturber_element_data.scattering_data, params.scattering_channels)
-
-potential, labels = calculate_pecs(params)
-plot_potential(params.R_arr, potential, labels, params)
+potential, labels = calculate_pecs(system)
+plot_potential(config.R_arr, potential, labels, system)

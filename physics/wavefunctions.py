@@ -4,20 +4,23 @@ from scipy.special import sph_harm_y
 
 class Wavefunction:
 
-    def __init__(self,n,l,params):
+    def __init__(self, n, l, system):
+        config = system.config
+
         self.n = n
         self.l = l
-        self.m = params.m
+        self.m = config.m
 
-        self.quantum_defect = params.quantum_defects[(n,l)]
+        self.quantum_defect = system.quantum_defects[(n,l)]
         self.n_eff = self.n - self.quantum_defect
-        self.rf = params.rydberg_factor
+        self.rf = system.rydberg_factor
 
         self.normalisation = self.calculate_normalisation()
 
-        self.theta = params.theta
-        self.phi = params.phi
+        self.theta = config.theta
+        self.phi = config.phi
         self.Y_lm = sph_harm_y(self.l, self.m, self.theta, self.phi)
+
 
     def calculate_normalisation(self):
 
@@ -35,6 +38,7 @@ class Wavefunction:
 
         return N
 
+
     def radial(self, r):
 
         W = mp.whitw(self.n_eff, self.l + 1/2, 2 * self.rf * r / self.n_eff)
@@ -42,14 +46,17 @@ class Wavefunction:
 
         return R_nl
 
+
     def angular(self):
         return self.Y_lm
+
 
     def psi(self, r):
 
         psi = self.radial(r) * self.angular()
 
         return psi
+
 
     def radial_derivative(self, r):
 
@@ -67,6 +74,7 @@ class Wavefunction:
 
         return radial_derivative
 
+
     def gradient_m_0(self, r):
 
         Y_lm = self.angular()
@@ -80,19 +88,20 @@ class Wavefunction:
             grad
         ])
 
+
     def gradient_m_mod_1(self, r):
 
-        grad = []
-
         derivative = (self.radial(r) / (2*r) 
-        * np.sqrt((2*self.l+1)*self.l*(self.l+1)/(4*np.pi))
+            * np.sqrt((2*self.l+1)*self.l*(self.l+1)/(4*np.pi))
         )
 
-        return np.array([
+        gradient = np.array([
             derivative,
             np.sign(self.m) * 1j * derivative,
             0.0
         ])
+
+        return gradient 
 
 
     def gradient(self, r):
@@ -104,6 +113,7 @@ class Wavefunction:
         else:
             raise ValueError(f"Gradient not implemented for m = {self.m}")
 
-def build_wavefunctions(params):
 
-    return [Wavefunction(n,l,params) for (n,l) in params.basis]
+def build_wavefunctions(system):
+
+    return [Wavefunction(n, l, system) for (n, l) in system.basis]

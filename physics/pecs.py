@@ -7,45 +7,50 @@ from physics.scattering import Scattering
 
 HARTREE_TO_GHZ = 6.5796839205e6
 
-def calculate_pecs(params):
+def calculate_pecs(system):
+
+    config = system.config
 
     pecs = {}
     labels = {}
 
-    for m in params.m_arr:
+    for m in config.m_arr:
 
-        params.m = m
+        config.m = m
 
-        wavefunctions = build_wavefunctions(params)
+        wavefunctions = build_wavefunctions(system)
 
-        H0 = build_H0(wavefunctions, params)
+        H0 = build_H0(wavefunctions, system)
 
         pecs[m] = {}
         labels[m] = {}
 
-        for channel in params.scattering_channels:
+        for channel in config.scattering_channels:
 
-            channel_pecs, channel_labels = calculate_channel_pecs(channel, wavefunctions, H0, params)
+            channel_pecs, channel_labels = calculate_channel_pecs(channel, wavefunctions, H0, system)
 
             pecs[m][channel] = channel_pecs
             labels[m][channel] = channel_labels
 
     return pecs, labels
 
-def calculate_channel_pecs(channel, wavefunctions, H0, params):
+
+def calculate_channel_pecs(channel, wavefunctions, H0, system):
+
+    config = system.config
 
     large_R_eigenvectors = None
 
     eigenvalues_list = []
     eigenvectors_list = []
 
-    data = params.perturber_element_data.scattering_data
+    data = system.perturber_element_data.scattering_data
 
     scattering = Scattering(data, channel)
 
-    for i, R in enumerate(reversed(params.R_arr)):
+    for i, R in enumerate(reversed(config.R_arr)):
 
-        H = build_H(R, wavefunctions, H0, scattering, params)
+        H = build_H(R, wavefunctions, H0, scattering, system)
 
         assert np.allclose(H, H.conj().T) # Check Hermicity of Hamiltonian
 
@@ -58,7 +63,7 @@ def calculate_channel_pecs(channel, wavefunctions, H0, params):
         if large_R_eigenvectors is None:
             large_R_eigenvectors = eigenvectors
 
-        print(f"{(i + 1) * 100 / len(params.R_arr):.1f} %")
+        print(f"{(i + 1) * 100 / len(config.R_arr):.1f} %")
 
     # Match each R step to the one before it so curves follow adiabatic states
     # rather than the energy ordering eigh happens to return.
@@ -68,12 +73,12 @@ def calculate_channel_pecs(channel, wavefunctions, H0, params):
     channel_pecs = channel_pecs[::-1, :]
 
     # Shift PECs so reference level is zero
-    channel_pecs = channel_pecs - params.reference_energy
+    channel_pecs = channel_pecs - system.reference_energy
 
-    channel_labels = label_eigenstates(large_R_eigenvectors, params.basis)
+    channel_labels = label_eigenstates(large_R_eigenvectors, system.basis)
 
     # Unit conversion to match literature (GHz)
-    if params.energy_units == "GHz":
+    if config.energy_units == "GHz":
         channel_pecs *= HARTREE_TO_GHZ
 
     return channel_pecs, channel_labels

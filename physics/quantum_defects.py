@@ -7,7 +7,7 @@ Two routes are available:
     expansion. Used where fitted parameters exist (currently Rb).
 
   * calculate_quantum_defect_from_levels - inverts measured NIST energy levels
-    directly. Used where they do not (currently He, Ca).
+    directly. Used where Rydberg-Ritz parameters do not exist (currently He, Ca).
 
 Both return a single, spin-free defect per (n, l); see
 spin_free_quantum_defect for what that means and what it assumes.

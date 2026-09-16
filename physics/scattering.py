@@ -5,9 +5,14 @@ class Scattering:
 
     def __init__(self, data, channel):
         """
-        data    : a module from data/scattering/, whose k_*_data and delta_*_data
+        Attributes
+        --------------------
+        data : ModuleType
+            a module from data/scattering/, whose k_*_data and delta_*_data
                   are dicts keyed by scattering channel
-        channel : e.g. "singlet", "tripletJ=2"
+
+        channel : str
+            e.g. "singlet", "tripletJ=2"
         """
         self.channel = channel
 
@@ -19,6 +24,7 @@ class Scattering:
         self.delta_0_spline = CubicSpline(self.k_s_data, self.delta_0_data)
         self.delta_1_spline = CubicSpline(self.k_p_data, self.delta_1_data)
 
+
     def delta_0(self, k):
 
         if k < self.k_s_data.min():
@@ -28,6 +34,7 @@ class Scattering:
             raise ValueError(f"k = {k} above s-scattering data range")
         
         return self.delta_0_spline(k)
+
 
     def delta_1(self, k):
         
@@ -39,11 +46,13 @@ class Scattering:
 
         return self.delta_1_spline(k)
 
+
     def a_s(self, k):
 
         a_s = - np.tan(self.delta_0(k)) / k
 
         return a_s
+
 
     def a_p(self, k):
 

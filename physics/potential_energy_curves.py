@@ -1,11 +1,17 @@
 import numpy as np
+from pathlib import Path
 
 from physics.wavefunctions import build_wavefunctions
 from physics.hamiltonian import build_H0, build_H
 from numerics.eigenvalues import diagonalise, label_eigenstates, track_eigenstates
-from physics.scattering import Scattering
+from scattering.scattering import Scattering
+from scattering.scattering_noble_gases import MERTScattering
 
 HARTREE_TO_GHZ = 6.5796839205e6
+HARTREE_TO_MHZ = 6.5796839205e9
+
+DIR = Path(__file__).parent / "data" / "calculated_pecs"
+
 
 def calculate_pecs(system):
 
@@ -32,6 +38,8 @@ def calculate_pecs(system):
             pecs[m][channel] = channel_pecs
             labels[m][channel] = channel_labels
 
+    save_pecs(config.filename, config.R_arr, pecs, labels)
+
     return pecs, labels
 
 
@@ -46,7 +54,12 @@ def calculate_channel_pecs(channel, wavefunctions, H0, system):
 
     data = system.perturber_element_data.scattering_data
 
-    scattering = Scattering(data, channel)
+    if config.perturber_element == "Kr":
+        scattering = MERTScattering(data, channel)
+    else:
+        alpha = system.perturber_element_data.ground_state_polarisability
+        fix_zero_len = config.fix_zero_energy_scattering_length
+        scattering = Scattering(data, channel, alpha, fix_zero_len)
 
     for i, R in enumerate(reversed(config.R_arr)):
 
@@ -80,5 +93,17 @@ def calculate_channel_pecs(channel, wavefunctions, H0, system):
     # Unit conversion to match literature (GHz)
     if config.energy_units == "GHz":
         channel_pecs *= HARTREE_TO_GHZ
+    elif config.energy_units == "MHz":
+        channel_pecs *= HARTREE_TO_MHZ
 
     return channel_pecs, channel_labels
+
+
+def save_pecs(filename, R_arr, pecs, labels):
+
+    np.savez(
+        DIR / filename,
+        R = R_arr,
+        energies = pecs,
+        labels = labels
+    )

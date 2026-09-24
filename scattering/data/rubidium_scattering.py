@@ -3,6 +3,15 @@ Points extracted from https://journals.aps.org/pra/pdf/10.1103/PhysRevA.66.04270
 """
 import numpy as np
 
+# MERT PARAMETERS -------------------------------------------------
+
+# from Bahrim C, Thumm U and Fabrikant I I 2001 
+# J. Phys. B:  At. Mol. Opt. Phys 34 L195
+zero_energy_scattering_lengths = {
+    "singlet" : 0.627,
+    "triplet" : -16.1
+}
+
 # SINGLET SCATTERING CHANNEL ======================================================================================
 
 # 1S0 --------------------------------------------------------------------------------------------------------------
@@ -232,3 +241,4 @@ delta_1_data = {
     "tripletJ=1": delta_1_triplet1_data,
     "tripletJ=2": delta_1_triplet2_data
 }
+

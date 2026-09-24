@@ -1,20 +1,7 @@
 """
-Quantum defects for the Rydberg atom.
 
-Two routes are available:
-
-  * calculate_quantum_defect_rydberg_ritz - evaluates a tabulated Rydberg-Ritz
-    expansion. Used where fitted parameters exist (currently Rb).
-
-  * calculate_quantum_defect_from_levels - inverts measured NIST energy levels
-    directly. Used where Rydberg-Ritz parameters do not exist (currently He, Ca).
-
-Both return a single, spin-free defect per (n, l); see
-spin_free_quantum_defect for what that means and what it assumes.
 """
 import numpy as np
-
-from data.energy_levels.energy_levels import get_energy
 
 
 def rydberg_ritz(n, mu_0, mu_0_prime):
@@ -26,7 +13,7 @@ def rydberg_ritz(n, mu_0, mu_0_prime):
     return mu_0 + mu_0_prime / (n - mu_0)**2
 
 
-def j_values(l):
+def j_values_Rb(l):
     """
     The j of the fine structure doublet for orbital angular momentum l.
     l = 0 has only j = 1/2.
@@ -37,7 +24,47 @@ def j_values(l):
     return [l - 0.5, l + 0.5]
 
 
-def spin_free_quantum_defect(n, l, defect_data):
+def j_values_He(l, s):
+
+    if s == 1:
+        return [l]
+
+    elif s == 3:
+        if l == 0:
+            return [1]
+        else:
+            return [l-1, l, l+1]
+        
+    else:
+        raise Exception(f"S={s} is not a valid Helium total spin state.")
+
+
+def spin_free_quantum_defect_He(n, l, s, defect_data):
+
+    if l > defect_data.L_MAX:
+        return 0.0
+
+    energy = 0.0
+    weight_total = 0.0
+
+    for j in j_values_He(l, s):
+
+        mu = rydberg_ritz(n, *defect_data.QUANTUM_DEFECTS[(l, s, j)])
+
+        weight = 2*j + 1
+
+        # Rydberg factor omitted: it cancels when the average is inverted below.
+        energy += weight * (-0.5 / (n - mu)**2)
+        weight_total += weight
+
+    energy /= weight_total
+
+    n_eff = np.sqrt(-0.5 / energy)
+
+    return n - n_eff
+
+    
+def spin_free_quantum_defect_Rb(n, l, defect_data):
     """
     A single quantum defect per (n, l), with the fine structure collapsed.
 
@@ -73,7 +100,7 @@ def spin_free_quantum_defect(n, l, defect_data):
     energy = 0.0
     weight_total = 0.0
 
-    for j in j_values(l):
+    for j in j_values_Rb(l):
 
         mu = rydberg_ritz(n, *defect_data.QUANTUM_DEFECTS[(l, j - l)])
 
@@ -90,32 +117,15 @@ def spin_free_quantum_defect(n, l, defect_data):
     return n - n_eff
 
 
-def calculate_quantum_defect_rydberg_ritz(n, l, defect_data):
+def calculate_quantum_defect(n, l, s, defect_data, rydberg_element):
     """
     Spin-free quantum defect from tabulated Rydberg-Ritz parameters.
     """
-    return spin_free_quantum_defect(n, l, defect_data)
-
-
-def calculate_quantum_defect_from_levels(
-    n, l, rydberg_spin, levels, ionisation_energy, rydberg_factor
-):
-    """
-    Spin-free quantum defect obtained by inverting a measured binding energy,
-
-        mu = n - sqrt(rydberg_factor / (2 * (E_ion - E_n,l))) .
-
-    Used for elements with no fitted Rydberg-Ritz parameters in data/.
-    """
-    if l >= 4:
-        return 0.0
-
-    energy = get_energy(n, l, rydberg_spin, levels)
-
-    if energy is None:
-        print(f"Energy level for n = {n}, l = {l}, spin = {rydberg_spin} not found in data")
-        return 0.0
-
-    diff = ionisation_energy - energy
-
-    return n - np.sqrt(rydberg_factor / (2 * diff))
+    if rydberg_element == "Rb":
+        defect = spin_free_quantum_defect_Rb(n, l, defect_data)
+        return defect
+    elif rydberg_element == "He":
+        defect = spin_free_quantum_defect_He(n, l, s, defect_data)
+        return defect
+    else:
+        raise Exception(f"Unable to calculate defect for Rydberg element {rydberg_element}")

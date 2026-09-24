@@ -37,6 +37,9 @@ def build_H(R,wavefunctions, H0, scattering, system):
     V_s = 2*np.pi * a_s * np.outer(np.conj(psi), psi)
     V_p = 6*np.pi * a_p * np.conj(grad_psi) @ grad_psi.T
 
-    H = H0 + V_s + V_p
+    if system.config.p_wave_scattering:
+        H = H0 + V_s + V_p
+    else:
+        H = H0 + V_s
 
     return H

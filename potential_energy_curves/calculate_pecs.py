@@ -1,19 +1,18 @@
 import numpy as np
-from pathlib import Path
 
+from parameters import RydbergSystem
 from physics.wavefunctions import build_wavefunctions
 from physics.hamiltonian import build_H0, build_H
 from numerics.eigenvalues import diagonalise, label_eigenstates, track_eigenstates
 from scattering.scattering import Scattering
 from scattering.scattering_noble_gases import MERTScattering
+from potential_energy_curves.store_pecs import PECData, save_pecs
 
 HARTREE_TO_GHZ = 6.5796839205e6
 HARTREE_TO_MHZ = 6.5796839205e9
 
-DIR = Path(__file__).parent / "data" / "calculated_pecs"
 
-
-def calculate_pecs(system):
+def calculate_pecs(system : RydbergSystem) -> None:
 
     config = system.config
 
@@ -38,12 +37,36 @@ def calculate_pecs(system):
             pecs[m][channel] = channel_pecs
             labels[m][channel] = channel_labels
 
-    save_pecs(config.filename, config.R_arr, pecs, labels)
+    pec_data = PECData(
+        R = config.R_arr,
+        energies = pecs,
+        labels = labels,
+        metadata={
+            "rydberg_element" : config.rydberg_element,
+            "perturber_element" : config.perturber_element,
+            "n_arr" : system.n_arr,
+            "m_arr" : config.m_arr,
+            "rydberg_spin" : config.rydberg_spin,
+            "reference_n" : config.reference_n,
+            "reference_l" : config.reference_l,
+            "reference_level" : system.reference_energy,
+            "energy_units" : config.energy_units,
+            "p_wave_scattering" : config.p_wave_scattering,
+            "vibrational_reduced_mass" : system.vibrational_reduced_mass,
+        }
+    )
 
-    return pecs, labels
+    print(config.pecs_file)
+
+    save_pecs(pec_data, config.pecs_file)
 
 
-def calculate_channel_pecs(channel, wavefunctions, H0, system):
+def calculate_channel_pecs(
+        channel : str, 
+        wavefunctions : np.ndarray, 
+        H0 : np.ndarray, 
+        system : RydbergSystem
+        ) -> tuple[np.ndarray, np.ndarray]:
 
     config = system.config
 
@@ -90,20 +113,10 @@ def calculate_channel_pecs(channel, wavefunctions, H0, system):
 
     channel_labels = label_eigenstates(large_R_eigenvectors, system.basis)
 
-    # Unit conversion to match literature (GHz)
+    # Unit conversion to match literature
     if config.energy_units == "GHz":
         channel_pecs *= HARTREE_TO_GHZ
     elif config.energy_units == "MHz":
         channel_pecs *= HARTREE_TO_MHZ
 
     return channel_pecs, channel_labels
-
-
-def save_pecs(filename, R_arr, pecs, labels):
-
-    np.savez(
-        DIR / filename,
-        R = R_arr,
-        energies = pecs,
-        labels = labels
-    )

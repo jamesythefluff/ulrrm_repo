@@ -1,3 +1,8 @@
+"""
+Scattering class splines tabulated s- and p-wave scattering
+phase shift data to handle calculation of scattering phase shifts
+and lengths.
+"""
 import numpy as np
 from scipy.interpolate import CubicSpline
 

@@ -1,6 +1,7 @@
 """
-Calculation of s- and p-wave scattering lengths using the
-MERT expansion given in 
+MERTScattering class handles MERT parameters and calculation
+of s- and p-wave scattering phase shifts and lengths following
+the method of
 https://iopscience.iop.org/article/10.1088/0953-4075/22/9/010.
 """
 import numpy as np

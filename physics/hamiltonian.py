@@ -3,7 +3,7 @@ import numpy as np
 
 def calculate_k(R, system):
 
-    k_2 = (- system.rydberg_factor**2 / system.reference_level**2 
+    k_2 = (- system.rydberg_factor**2 / system.config.reference_n**2 
            + 2 * system.rydberg_factor / R)
 
     if k_2 < 0:
